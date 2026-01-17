@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reel Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-primary: #0a0a0f;
+        --bg-secondary: #12121a;
+        --bg-card: #1a1a24;
+        --bg-input: #22222e;
+        --border: #2a2a3a;
+        --text-primary: #f5f5f7;
+        --text-secondary: #8b8b9e;
+        --text-muted: #5c5c6f;
+        --accent: #6366f1;
+        --accent-hover: #818cf8;
+        --success: #22c55e;
+        --error: #ef4444;
+        --warning: #f59e0b;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg-primary);
+        min-height: 100vh;
+        color: var(--text-primary);
+        line-height: 1.5;
+      }
+
+      .container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      /* Header */
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+      }
+
+      .header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      /* Input Section */
+      .input-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .input-wrapper {
+        display: flex;
+        gap: 12px;
+      }
+
+      .input-field {
+        flex: 1;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-input);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .input-field:focus {
+        border-color: var(--accent);
+      }
+
+      .input-field::placeholder {
+        color: var(--text-muted);
+      }
+
+      textarea.input-field {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 14px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: white;
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: var(--accent-hover);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background: var(--bg-input);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+      }
+
+      .btn-secondary:hover {
+        background: var(--border);
+      }
+
+      .btn-secondary.active {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+
+      .btn-full {
+        width: 100%;
+      }
+
+      /* Card */
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 20px;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .card-header h2 {
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .card-header .icon {
+        width: 20px;
+        height: 20px;
+        opacity: 0.7;
+      }
+
+      /* Preview Section */
+      .preview-section {
+        display: none;
+      }
+
+      .preview-section.active {
+        display: block;
+      }
+
+      /* Cropper */
+      .cropper-container {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto 20px;
+        background: var(--bg-input);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .cropper-image {
+        width: 100%;
+        display: block;
+      }
+
+      .crop-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        pointer-events: none;
+      }
+
+      .crop-box {
+        position: absolute;
+        border: 2px solid var(--accent);
+        background: transparent;
+        cursor: move;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+      }
+
+      .crop-box::before {
+        content: "";
+        position: absolute;
+        top: 33.33%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .crop-box::after {
+        content: "";
+        position: absolute;
+        top: 66.66%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .crop-handle {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: var(--accent);
+        border-radius: 2px;
+      }
+
+      .crop-handle.nw {
+        top: -6px;
+        left: -6px;
+        cursor: nw-resize;
+      }
+      .crop-handle.ne {
+        top: -6px;
+        right: -6px;
+        cursor: ne-resize;
+      }
+      .crop-handle.sw {
+        bottom: -6px;
+        left: -6px;
+        cursor: sw-resize;
+      }
+      .crop-handle.se {
+        bottom: -6px;
+        right: -6px;
+        cursor: se-resize;
+      }
+
+      .crop-info {
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 12px;
+      }
+
+      .video-preview {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .thumbnail {
+        width: 200px;
+        height: 112px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: var(--bg-input);
+        flex-shrink: 0;
+      }
+
+      .video-meta {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .video-meta h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .video-meta p {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 4px;
+      }
+
+      /* Form Groups */
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .form-label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+      }
+
+      .form-row {
+        display: flex;
+        gap: 12px;
+      }
+
+      .form-row > * {
+        flex: 1;
+      }
+
+      /* Time Inputs */
+      .time-input {
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-input);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-family: "SF Mono", Monaco, monospace;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .time-input:focus {
+        border-color: var(--accent);
+      }
+
+      /* Toggle Buttons */
+      .toggle-group {
+        display: flex;
+        gap: 8px;
+      }
+
+      .toggle-btn {
+        padding: 10px 16px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg-input);
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .toggle-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+
+      /* Color Picker */
+      .color-row {
+        display: flex;
+        gap: 12px;
+      }
+
+      .color-picker-group {
+        flex: 1;
+      }
+
+      .color-picker-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--bg-input);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+
+      input[type="color"] {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background: transparent;
+        padding: 0;
+      }
+
+      input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+
+      input[type="color"]::-webkit-color-swatch {
+        border: none;
+        border-radius: 4px;
+      }
+
+      .color-hex {
+        flex: 1;
+        border: none;
+        background: transparent;
+        color: var(--text-primary);
+        font-family: "SF Mono", Monaco, monospace;
+        font-size: 0.85rem;
+        outline: none;
+        width: 80px;
+      }
+
+      .gradient-preview {
+        height: 48px;
+        border-radius: 8px;
+        margin-top: 12px;
+        border: 1px solid var(--border);
+      }
+
+      /* File Upload */
+      .upload-zone {
+        border: 2px dashed var(--border);
+        border-radius: 8px;
+        padding: 32px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .upload-zone:hover {
+        border-color: var(--accent);
+        background: rgba(99, 102, 241, 0.05);
+      }
+
+      .upload-zone.has-file {
+        border-color: var(--success);
+        background: rgba(34, 197, 94, 0.05);
+      }
+
+      .upload-zone input {
+        display: none;
+      }
+
+      .upload-icon {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 12px;
+        opacity: 0.5;
+      }
+
+      .upload-text {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      .upload-filename {
+        color: var(--success);
+        font-weight: 500;
+        margin-top: 8px;
+      }
+
+      /* Platform Select */
+      .platform-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+
+      /* Direction Grid */
+      .direction-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        max-width: 200px;
+      }
+
+      .direction-btn {
+        aspect-ratio: 1;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-input);
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .direction-btn:hover {
+        border-color: var(--text-muted);
+      }
+
+      .direction-btn.active {
+        border-color: var(--accent);
+        background: rgba(99, 102, 241, 0.15);
+        color: var(--accent);
+      }
+
+      .platform-btn {
+        padding: 12px 8px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-input);
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+      }
+
+      .platform-btn:hover {
+        border-color: var(--text-muted);
+      }
+
+      .platform-btn.active {
+        border-color: var(--accent);
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--accent);
+      }
+
+      /* Divider */
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 24px 0;
+      }
+
+      /* Toast Notifications */
+      .toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .toast {
+        padding: 16px 20px;
+        border-radius: 10px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 320px;
+        max-width: 420px;
+        animation: slideIn 0.3s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(100%);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .toast.removing {
+        animation: slideOut 0.3s ease forwards;
+      }
+
+      @keyframes slideOut {
+        to {
+          opacity: 0;
+          transform: translateX(100%);
+        }
+      }
+
+      .toast-icon {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+
+      .toast-content {
+        flex: 1;
+      }
+
+      .toast-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 2px;
+      }
+
+      .toast-message {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+
+      .toast.success .toast-icon {
+        color: var(--success);
+      }
+      .toast.error .toast-icon {
+        color: var(--error);
+      }
+      .toast.loading .toast-icon {
+        color: var(--accent);
+      }
+
+      /* Loading Spinner */
+      .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Progress Bar */
+      .progress-bar {
+        height: 4px;
+        background: var(--bg-input);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 12px;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: var(--accent);
+        border-radius: 2px;
+        transition: width 0.3s;
+      }
+
+      .progress-fill.indeterminate {
+        width: 30%;
+        animation: indeterminate 1.5s ease-in-out infinite;
+      }
+
+      @keyframes indeterminate {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(400%);
+        }
+      }
+
+      /* Download Result */
+      .download-result {
+        display: none;
+        padding: 20px;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 10px;
+        margin-top: 20px;
+      }
+
+      .download-result.active {
+        display: block;
+      }
+
+      .download-result h4 {
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+        color: var(--success);
+      }
+
+      .download-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: var(--success);
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: opacity 0.2s;
+      }
+
+      .download-link:hover {
+        opacity: 0.9;
+      }
+
+      /* Processing Overlay */
+      .processing-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 10, 15, 0.9);
+        z-index: 999;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .processing-overlay.active {
+        display: flex;
+      }
+
+      .processing-modal {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 40px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+      }
+
+      .processing-spinner {
+        width: 48px;
+        height: 48px;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      .processing-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .processing-status {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+      }
+
+      /* Responsive */
+      @media (max-width: 600px) {
+        .container {
+          padding: 24px 16px;
+        }
+
+        .video-preview {
+          flex-direction: column;
+        }
+
+        .thumbnail {
+          width: 100%;
+          height: 180px;
+        }
+
+        .platform-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .color-row {
+          flex-direction: column;
+        }
+
+        .toast {
+          min-width: auto;
+          margin: 0 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>Reel Simulator</h1>
+        <p>Download and customize videos with templates</p>
+      </header>
+
+      <section class="input-section">
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="url"
+            class="input-field"
+            placeholder="Paste video URL (YouTube, Instagram, etc.)"
+          />
+          <button class="btn btn-primary" id="previewBtn" onclick="fetchInfo()">
+            <span>Preview</span>
+          </button>
+        </div>
+      </section>
+
+      <div id="preview" class="preview-section">
+        <div class="card">
+          <div class="card-header">
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+            <h2>Video Details</h2>
+          </div>
+
+          <div class="video-preview">
+            <img id="thumbnail" class="thumbnail" src="" alt="Thumbnail" />
+            <div class="video-meta">
+              <h3 id="title">-</h3>
+              <p id="channel">-</p>
+              <p id="duration">-</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Time Range</label>
+            <div class="form-row">
+              <div>
+                <input
+                  type="text"
+                  id="start_time"
+                  class="time-input"
+                  placeholder="00:00:00"
+                  value="00:00:00"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  id="end_time"
+                  class="time-input"
+                  placeholder="00:00:00"
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            class="btn btn-secondary btn-full"
+            id="prepareBtn"
+            onclick="prepareVideo()"
+            style="margin-top: 16px"
+          >
+            <svg
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <span>Prepare for Cropping</span>
+          </button>
+        </div>
+
+        <!-- Cropper Card -->
+        <div class="card" id="cropper-card" style="display: none">
+          <div class="card-header">
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <h2>Crop Video</h2>
+          </div>
+          <div class="cropper-container" id="cropper-container">
+            <img
+              id="crop-preview"
+              class="cropper-image"
+              src=""
+              alt="Video Preview"
+            />
+            <div class="crop-box" id="crop-box">
+              <div class="crop-handle nw" data-handle="nw"></div>
+              <div class="crop-handle ne" data-handle="ne"></div>
+              <div class="crop-handle sw" data-handle="sw"></div>
+              <div class="crop-handle se" data-handle="se"></div>
+            </div>
+          </div>
+          <div class="crop-info">Drag to move, corners to resize</div>
+          <div class="form-row" style="margin-top: 16px">
+            <button class="btn btn-secondary" onclick="resetCrop()">
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+              />
+            </svg>
+            <h2>Background</h2>
+          </div>
+
+          <div class="form-group">
+            <div class="toggle-group">
+              <button
+                class="toggle-btn active"
+                id="btn-gradient"
+                onclick="setBgType('gradient')"
+              >
+                Gradient
+              </button>
+              <button
+                class="toggle-btn"
+                id="btn-image"
+                onclick="setBgType('image')"
+              >
+                Image
+              </button>
+            </div>
+          </div>
+
+          <div id="gradient-options">
+            <div class="color-row">
+              <div class="color-picker-group">
+                <label class="form-label">Primary</label>
+                <div class="color-picker-wrapper">
+                  <input
+                    type="color"
+                    id="color1"
+                    value="#001534"
+                    onchange="updateGradient()"
+                  />
+                  <input
+                    type="text"
+                    class="color-hex"
+                    id="color1-hex"
+                    value="#001534"
+                    onchange="updateColorFromHex('color1')"
+                  />
+                </div>
+              </div>
+              <div class="color-picker-group">
+                <label class="form-label">Secondary</label>
+                <div class="color-picker-wrapper">
+                  <input
+                    type="color"
+                    id="color2"
+                    value="#6409a4"
+                    onchange="updateGradient()"
+                  />
+                  <input
+                    type="text"
+                    class="color-hex"
+                    id="color2-hex"
+                    value="#6409a4"
+                    onchange="updateColorFromHex('color2')"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="gradient-preview" id="gradient-preview"></div>
+
+            <div class="form-group" style="margin-top: 16px">
+              <label class="form-label">Gradient Direction</label>
+              <div class="direction-grid">
+                <button
+                  class="direction-btn"
+                  data-angle="diagonal-tl"
+                  onclick="setGradientAngle(this)"
+                  title="Diagonal Up Left"
+                >
+                  ↖
+                </button>
+                <button
+                  class="direction-btn"
+                  data-angle="top-bottom"
+                  onclick="setGradientAngle(this)"
+                  title="Top to Bottom"
+                >
+                  ↓
+                </button>
+                <button
+                  class="direction-btn"
+                  data-angle="diagonal-tr"
+                  onclick="setGradientAngle(this)"
+                  title="Diagonal Up Right"
+                >
+                  ↗
+                </button>
+                <button
+                  class="direction-btn"
+                  data-angle="left-right"
+                  onclick="setGradientAngle(this)"
+                  title="Left to Right"
+                >
+                  →
+                </button>
+                <button
+                  class="direction-btn"
+                  data-angle="right-left"
+                  onclick="setGradientAngle(this)"
+                  title="Right to Left"
+                >
+                  ←
+                </button>
+                <button
+                  class="direction-btn"
+                  data-angle="diagonal-bl"
+                  onclick="setGradientAngle(this)"
+                  title="Diagonal Down Left"
+                >
+                  ↙
+                </button>
+                <button
+                  class="direction-btn"
+                  data-angle="bottom-top"
+                  onclick="setGradientAngle(this)"
+                  title="Bottom to Top"
+                >
+                  ↑
+                </button>
+                <button
+                  class="direction-btn active"
+                  data-angle="diagonal-br"
+                  onclick="setGradientAngle(this)"
+                  title="Diagonal Down Right"
+                >
+                  ↘
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="image-options" style="display: none">
+            <div
+              class="upload-zone"
+              id="upload-zone"
+              onclick="document.getElementById('bg-file').click()"
+            >
+              <input
+                type="file"
+                id="bg-file"
+                accept="image/*"
+                onchange="handleBgUpload(this)"
+              />
+              <svg
+                class="upload-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <div class="upload-text">Click or drag to upload background</div>
+              <div class="upload-filename" id="bg-filename"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            <h2>Text & Branding</h2>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"
+              >Overlay Text (AI auto-highlights key phrases)</label
+            >
+            <textarea
+              id="overlay_text"
+              class="input-field"
+              placeholder="Enter your caption or message..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Platform</label>
+            <div class="platform-grid">
+              <button
+                class="platform-btn active"
+                data-platform="instagram"
+                onclick="selectPlatform(this)"
+              >
+                Instagram
+              </button>
+              <button
+                class="platform-btn"
+                data-platform="twitter"
+                onclick="selectPlatform(this)"
+              >
+                X / Twitter
+              </button>
+              <button
+                class="platform-btn"
+                data-platform="facebook"
+                onclick="selectPlatform(this)"
+              >
+                Facebook
+              </button>
+              <button
+                class="platform-btn"
+                data-platform="youtube"
+                onclick="selectPlatform(this)"
+              >
+                YouTube
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input
+              type="text"
+              id="username"
+              class="input-field"
+              placeholder="@username"
+            />
+          </div>
+        </div>
+
+        <button
+          class="btn btn-primary btn-full"
+          id="downloadBtn"
+          onclick="downloadVideo()"
+        >
+          <svg
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+          <span>Generate Video</span>
+        </button>
+
+        <div class="download-result" id="download-result">
+          <h4>Video Ready!</h4>
+          <a class="download-link" id="download-link" href="#" download>
+            <svg
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            Download Video
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Processing Overlay -->
+    <div class="processing-overlay" id="processing-overlay">
+      <div class="processing-modal">
+        <div class="processing-spinner"></div>
+        <div class="processing-title">Processing Video</div>
+        <div class="processing-status" id="processing-status">
+          Downloading video...
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill indeterminate"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+      let videoInfo = null;
+      let selectedPlatform = "instagram";
+      let bgType = "gradient";
+      let uploadedBgId = null;
+      let gradientAngle = "diagonal-br";
+
+      // Cropper state
+      let preparedVideoId = null;
+      let sourceVideoWidth = 0;
+      let sourceVideoHeight = 0;
+      let cropBox = { x: 0, y: 0, w: 100, h: 100 };
+      let isDragging = false;
+      let isResizing = false;
+      let resizeHandle = null;
+      let dragStart = { x: 0, y: 0 };
+      let cropStart = { x: 0, y: 0, w: 0, h: 0 };
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        updateGradient();
+        setupDragDrop();
+        setupCropper();
+      });
+
+      // Toast Notification System
+      function showToast(type, title, message, duration = 4000) {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+
+        const icons = {
+          success:
+            '<svg class="toast-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
+          error:
+            '<svg class="toast-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
+          loading: '<div class="spinner"></div>',
+        };
+
+        toast.innerHTML = `
+                ${icons[type] || icons.loading}
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    ${
+                      message
+                        ? `<div class="toast-message">${message}</div>`
+                        : ""
+                    }
+                </div>
+            `;
+
+        container.appendChild(toast);
+
+        if (type !== "loading") {
+          setTimeout(() => {
+            toast.classList.add("removing");
+            setTimeout(() => toast.remove(), 300);
+          }, duration);
+        }
+
+        return toast;
+      }
+
+      function removeToast(toast) {
+        if (toast) {
+          toast.classList.add("removing");
+          setTimeout(() => toast.remove(), 300);
+        }
+      }
+
+      // Background Type Toggle
+      function setBgType(type) {
+        bgType = type;
+        document
+          .getElementById("btn-gradient")
+          .classList.toggle("active", type === "gradient");
+        document
+          .getElementById("btn-image")
+          .classList.toggle("active", type === "image");
+        document.getElementById("gradient-options").style.display =
+          type === "gradient" ? "block" : "none";
+        document.getElementById("image-options").style.display =
+          type === "image" ? "block" : "none";
+      }
+
+      // Gradient Controls
+      function updateGradient() {
+        const color1 = document.getElementById("color1").value;
+        const color2 = document.getElementById("color2").value;
+        document.getElementById("color1-hex").value = color1.toUpperCase();
+        document.getElementById("color2-hex").value = color2.toUpperCase();
+
+        const angles = {
+          "top-bottom": "180deg",
+          "bottom-top": "0deg",
+          "left-right": "90deg",
+          "right-left": "270deg",
+          "diagonal-br": "135deg",
+          "diagonal-bl": "225deg",
+          "diagonal-tr": "45deg",
+          "diagonal-tl": "315deg",
+        };
+        const cssAngle = angles[gradientAngle] || "135deg";
+        document.getElementById(
+          "gradient-preview"
+        ).style.background = `linear-gradient(${cssAngle}, ${color1}, ${color2})`;
+      }
+
+      function setGradientAngle(btn) {
+        document
+          .querySelectorAll(".direction-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        gradientAngle = btn.dataset.angle;
+        updateGradient();
+      }
+
+      function updateColorFromHex(id) {
+        const hex = document.getElementById(id + "-hex").value;
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+          document.getElementById(id).value = hex;
+          updateGradient();
+        }
+      }
+
+      // File Upload
+      async function handleBgUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const loadingToast = showToast("loading", "Uploading...", file.name);
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const res = await fetch("/upload-bg", {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) throw new Error("Upload failed");
+          const data = await res.json();
+          uploadedBgId = data.id;
+
+          document.getElementById("upload-zone").classList.add("has-file");
+          document.getElementById("bg-filename").textContent = file.name;
+
+          removeToast(loadingToast);
+          showToast("success", "Upload Complete", file.name);
+        } catch (e) {
+          removeToast(loadingToast);
+          showToast("error", "Upload Failed", e.message);
+        }
+      }
+
+      function setupDragDrop() {
+        const zone = document.getElementById("upload-zone");
+
+        zone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          zone.style.borderColor = "var(--accent)";
+        });
+
+        zone.addEventListener("dragleave", () => {
+          zone.style.borderColor = "";
+        });
+
+        zone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          zone.style.borderColor = "";
+          document.getElementById("bg-file").files = e.dataTransfer.files;
+          handleBgUpload(document.getElementById("bg-file"));
+        });
+      }
+
+      // Platform Selection
+      function selectPlatform(btn) {
+        document
+          .querySelectorAll(".platform-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedPlatform = btn.dataset.platform;
+      }
+
+      // Utility Functions
+      function formatDuration(seconds) {
+        seconds = Math.floor(seconds);
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h.toString().padStart(2, "0")}:${m
+          .toString()
+          .padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+      }
+
+      function setButtonLoading(btn, loading) {
+        btn.disabled = loading;
+        if (loading) {
+          btn.dataset.originalText = btn.innerHTML;
+          btn.innerHTML = '<div class="spinner"></div><span>Loading...</span>';
+        } else {
+          btn.innerHTML = btn.dataset.originalText;
+        }
+      }
+
+      // Fetch Video Info
+      async function fetchInfo() {
+        const url = document.getElementById("url").value.trim();
+        if (!url) {
+          showToast("error", "Missing URL", "Please enter a video URL");
+          return;
+        }
+
+        const btn = document.getElementById("previewBtn");
+        setButtonLoading(btn, true);
+        const loadingToast = showToast(
+          "loading",
+          "Fetching Info",
+          "Getting video details..."
+        );
+
+        try {
+          const res = await fetch(`/info?url=${encodeURIComponent(url)}`);
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || "Failed to fetch video info");
+          }
+
+          videoInfo = await res.json();
+
+          document.getElementById("thumbnail").src = videoInfo.thumbnail || "";
+          document.getElementById("title").textContent =
+            videoInfo.title || "Untitled";
+          document.getElementById("channel").textContent =
+            videoInfo.channel || "Unknown";
+          document.getElementById(
+            "duration"
+          ).textContent = `Duration: ${formatDuration(videoInfo.duration)}`;
+          document.getElementById("end_time").value = formatDuration(
+            videoInfo.duration
+          );
+
+          document.getElementById("preview").classList.add("active");
+          document.getElementById("download-result").classList.remove("active");
+
+          // Reset cropper state
+          preparedVideoId = null;
+          document.getElementById("cropper-card").style.display = "none";
+
+          removeToast(loadingToast);
+          showToast("success", "Video Found", videoInfo.title);
+        } catch (e) {
+          removeToast(loadingToast);
+          showToast("error", "Error", e.message);
+        } finally {
+          setButtonLoading(btn, false);
+        }
+      }
+
+      // Prepare Video (download + cropper)
+      async function prepareVideo() {
+        const url = document.getElementById("url").value.trim();
+        if (!url) {
+          showToast("error", "Missing URL", "Please enter a video URL");
+          return;
+        }
+
+        const btn = document.getElementById("prepareBtn");
+        setButtonLoading(btn, true);
+        const loadingToast = showToast(
+          "loading",
+          "Preparing Video",
+          "Downloading for crop preview..."
+        );
+
+        try {
+          const params = new URLSearchParams({
+            url,
+            start_time: document.getElementById("start_time").value,
+            end_time: document.getElementById("end_time").value,
+          });
+
+          const res = await fetch(`/prepare?${params}`, { method: "POST" });
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || "Failed to prepare video");
+          }
+
+          const data = await res.json();
+          preparedVideoId = data.video_id;
+          sourceVideoWidth = data.width;
+          sourceVideoHeight = data.height;
+
+          // Show cropper with preview image
+          document.getElementById("crop-preview").src = `/file/${data.preview}`;
+          document.getElementById("cropper-card").style.display = "block";
+
+          // Reset crop box to full area
+          resetCrop();
+
+          removeToast(loadingToast);
+          showToast("success", "Ready to Crop", "Drag to select crop area");
+        } catch (e) {
+          removeToast(loadingToast);
+          showToast("error", "Error", e.message);
+        } finally {
+          setButtonLoading(btn, false);
+        }
+      }
+
+      // Setup Cropper Drag/Resize
+      function setupCropper() {
+        const cropBoxEl = document.getElementById("crop-box");
+        const container = document.getElementById("cropper-container");
+
+        // Mouse down on crop box (drag)
+        cropBoxEl.addEventListener("mousedown", (e) => {
+          if (e.target.classList.contains("crop-handle")) {
+            isResizing = true;
+            resizeHandle = e.target.dataset.handle;
+          } else {
+            isDragging = true;
+          }
+          dragStart = { x: e.clientX, y: e.clientY };
+          cropStart = { ...cropBox };
+          e.preventDefault();
+        });
+
+        // Mouse move
+        document.addEventListener("mousemove", (e) => {
+          if (!isDragging && !isResizing) return;
+
+          const containerRect = container.getBoundingClientRect();
+          const imgEl = document.getElementById("crop-preview");
+          const imgRect = imgEl.getBoundingClientRect();
+
+          const dx = ((e.clientX - dragStart.x) / imgRect.width) * 100;
+          const dy = ((e.clientY - dragStart.y) / imgRect.height) * 100;
+
+          if (isDragging) {
+            cropBox.x = Math.max(
+              0,
+              Math.min(100 - cropBox.w, cropStart.x + dx)
+            );
+            cropBox.y = Math.max(
+              0,
+              Math.min(100 - cropBox.h, cropStart.y + dy)
+            );
+          } else if (isResizing) {
+            handleResize(dx, dy);
+          }
+
+          updateCropBoxUI();
+        });
+
+        // Mouse up
+        document.addEventListener("mouseup", () => {
+          isDragging = false;
+          isResizing = false;
+          resizeHandle = null;
+        });
+
+        // Touch support
+        cropBoxEl.addEventListener("touchstart", (e) => {
+          const touch = e.touches[0];
+          if (e.target.classList.contains("crop-handle")) {
+            isResizing = true;
+            resizeHandle = e.target.dataset.handle;
+          } else {
+            isDragging = true;
+          }
+          dragStart = { x: touch.clientX, y: touch.clientY };
+          cropStart = { ...cropBox };
+          e.preventDefault();
+        });
+
+        document.addEventListener("touchmove", (e) => {
+          if (!isDragging && !isResizing) return;
+          const touch = e.touches[0];
+
+          const imgEl = document.getElementById("crop-preview");
+          const imgRect = imgEl.getBoundingClientRect();
+
+          const dx = ((touch.clientX - dragStart.x) / imgRect.width) * 100;
+          const dy = ((touch.clientY - dragStart.y) / imgRect.height) * 100;
+
+          if (isDragging) {
+            cropBox.x = Math.max(
+              0,
+              Math.min(100 - cropBox.w, cropStart.x + dx)
+            );
+            cropBox.y = Math.max(
+              0,
+              Math.min(100 - cropBox.h, cropStart.y + dy)
+            );
+          } else if (isResizing) {
+            handleResize(dx, dy);
+          }
+
+          updateCropBoxUI();
+        });
+
+        document.addEventListener("touchend", () => {
+          isDragging = false;
+          isResizing = false;
+          resizeHandle = null;
+        });
+      }
+
+      function handleResize(dx, dy) {
+        const minSize = 10; // Minimum 10% size
+
+        switch (resizeHandle) {
+          case "nw":
+            cropBox.x = Math.max(
+              0,
+              Math.min(cropStart.x + cropStart.w - minSize, cropStart.x + dx)
+            );
+            cropBox.y = Math.max(
+              0,
+              Math.min(cropStart.y + cropStart.h - minSize, cropStart.y + dy)
+            );
+            cropBox.w = cropStart.w - (cropBox.x - cropStart.x);
+            cropBox.h = cropStart.h - (cropBox.y - cropStart.y);
+            break;
+          case "ne":
+            cropBox.y = Math.max(
+              0,
+              Math.min(cropStart.y + cropStart.h - minSize, cropStart.y + dy)
+            );
+            cropBox.w = Math.max(
+              minSize,
+              Math.min(100 - cropStart.x, cropStart.w + dx)
+            );
+            cropBox.h = cropStart.h - (cropBox.y - cropStart.y);
+            break;
+          case "sw":
+            cropBox.x = Math.max(
+              0,
+              Math.min(cropStart.x + cropStart.w - minSize, cropStart.x + dx)
+            );
+            cropBox.w = cropStart.w - (cropBox.x - cropStart.x);
+            cropBox.h = Math.max(
+              minSize,
+              Math.min(100 - cropStart.y, cropStart.h + dy)
+            );
+            break;
+          case "se":
+            cropBox.w = Math.max(
+              minSize,
+              Math.min(100 - cropStart.x, cropStart.w + dx)
+            );
+            cropBox.h = Math.max(
+              minSize,
+              Math.min(100 - cropStart.y, cropStart.h + dy)
+            );
+            break;
+        }
+      }
+
+      function updateCropBoxUI() {
+        const cropBoxEl = document.getElementById("crop-box");
+        cropBoxEl.style.left = cropBox.x + "%";
+        cropBoxEl.style.top = cropBox.y + "%";
+        cropBoxEl.style.width = cropBox.w + "%";
+        cropBoxEl.style.height = cropBox.h + "%";
+      }
+
+      function resetCrop() {
+        cropBox = { x: 0, y: 0, w: 100, h: 100 };
+        updateCropBoxUI();
+      }
+
+      // Download Video
+      async function downloadVideo() {
+        const url = document.getElementById("url").value.trim();
+        if (!url) {
+          showToast("error", "Missing URL", "Please enter a video URL");
+          return;
+        }
+
+        const overlay = document.getElementById("processing-overlay");
+        const statusEl = document.getElementById("processing-status");
+
+        overlay.classList.add("active");
+        document.getElementById("download-result").classList.remove("active");
+
+        const steps = preparedVideoId
+          ? [
+              "Processing with AI...",
+              "Applying template...",
+              "Encoding final video...",
+            ]
+          : [
+              "Downloading video...",
+              "Processing with AI...",
+              "Applying template...",
+              "Encoding final video...",
+            ];
+
+        statusEl.textContent = steps[0];
+        let stepIndex = 0;
+        const stepInterval = setInterval(() => {
+          stepIndex = (stepIndex + 1) % steps.length;
+          statusEl.textContent = steps[stepIndex];
+        }, 3000);
+
+        try {
+          const params = new URLSearchParams({
+            overlay_text: document.getElementById("overlay_text").value,
+            username: document.getElementById("username").value,
+            platform: selectedPlatform,
+            color1: document.getElementById("color1").value,
+            color2: document.getElementById("color2").value,
+            bg_type: bgType,
+            gradient_angle: gradientAngle,
+            crop_x: cropBox.x,
+            crop_y: cropBox.y,
+            crop_w: cropBox.w,
+            crop_h: cropBox.h,
+          });
+
+          // Use prepared video or download fresh
+          if (preparedVideoId) {
+            params.append("video_id", preparedVideoId);
+          } else {
+            params.append("url", url);
+            params.append(
+              "start_time",
+              document.getElementById("start_time").value
+            );
+            params.append(
+              "end_time",
+              document.getElementById("end_time").value
+            );
+          }
+
+          if (bgType === "image" && uploadedBgId) {
+            params.append("bg_image_id", uploadedBgId);
+          }
+
+          const res = await fetch(`/download?${params}`, { method: "POST" });
+
+          clearInterval(stepInterval);
+
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || "Download failed");
+          }
+
+          const data = await res.json();
+
+          overlay.classList.remove("active");
+
+          const resultEl = document.getElementById("download-result");
+          const linkEl = document.getElementById("download-link");
+          linkEl.href = `/file/${data.file}`;
+          resultEl.classList.add("active");
+
+          showToast("success", "Video Ready!", data.title);
+
+          // Reset prepared video
+          preparedVideoId = null;
+        } catch (e) {
+          clearInterval(stepInterval);
+          overlay.classList.remove("active");
+          showToast("error", "Processing Failed", e.message);
+        }
+      }
+    </script>
+  </body>
+</html>
