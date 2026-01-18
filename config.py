@@ -1,11 +1,15 @@
 # config.py
 import os
+import platform
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Directory settings
-DOWNLOAD_DIR = "downloads"
+# Directory settings - use /tmp on Render (Linux) for better performance
+if platform.system() == "Linux":
+    DOWNLOAD_DIR = "/tmp/downloads"
+else:
+    DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 # API Keys
